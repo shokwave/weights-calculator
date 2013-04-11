@@ -1,7 +1,7 @@
 # Set of weights, for a given number find the collection of weights that makes it up
 
 class Weight
-  def initialize (weight)
+  def initialize(weight)
     @weight = weight
   end
 
@@ -10,74 +10,52 @@ class Weight
   end
 
   def lb
-    @weight * 2.204
+    (@weight * 2.204 * 2).round / 2.0
   end
-end
-
-class Plate
-	attr_reader :kilos, :pounds
-
-	def initialize (weight)
-		@kilos = weight
-		@pounds = (((2.204*weight)*2).round)/2.0
-	end
 
 	def to_s
-		"#{@kilos} kg / #{@pounds} lbs"
+		"#{kg} kg / #{lb} lbs"
 	end
 end
 
-class Bar
-	attr_reader :kilos, :pounds
+class Plate < Weight
+	def initialize(weight)
+    super weight
+	end
+end
 
+class Bar < Weight
 	def initialize
-		@kilos = (20/2.204)
-		@pounds = 20
+    super 9
 	end
 end
-
-
-Combination = Struct.new(:weights, :kg, :lb)
 
 class WeightCalculator
-	def initialize (weight_set)
-		@set = all_combinations weight_set
-	end
+  attr_reader :combinations
 
-	def all_combinations (weight_set)
-		weight_set.map! { |weight| Plate.new(weight) }
-		
-		arrangements = []
-		(1..weight_set.length).each do |n|
-			weight_set.combination(n).each do |foo|
-				arrangements << Combination.new(foo, ((foo.reduce(0) { |acc, w| acc + w.kilos })*2 + 9.07), ((foo.reduce(0) { |acc, w| acc + w.pounds })*2 + 20))
-			end
-		end
-		arrangements
-	end
+  def initialize(weight_set)
+    plates = weight_set.map { |weight| Plate.new(weight) }
+    @bar = Bar.new
+    @combinations = generate_combinations(plates)
+  end
 
-	def kg (desired_weight)
-		diff = 1000
-		@set.reduce do |lowest, weight|
-			this_diff = (desired_weight - weight.kg).abs 
-			if this_diff < diff
-				diff = this_diff
-				lowest = weight.weights
-			end
-			lowest
-		end
-	end
+  def generate_combinations(plates)
+    combinations = Hash.new
+    (0..plates.length).each do |n|
+      plates.combination(n).each do |poundage|
+        total = poundage.reduce(0) { |acc, plate| plate.kg + acc }
+        combo = combinations.fetch(total) do 
+          combinations[total] = poundage
+        end
+        prev_plates = combo
+        combinations[total] = poundage if poundage.length < prev_plates.length
+      end
+    end
+    combinations
+  end
 
-	def lbs
-	end
+  def lift_kg(amount)
+    poundage = (amount - @bar.kg) / 2.0
+    combinations[poundage]
+  end
 end
-
-weight_calc = WeightCalculator.new([
-	6.8,
-	5, 5,
-	4.5,
-	2.5, 2.5, 2.5, 2.5, 2.5, 2.5,
-	2, 2,
-	1, 1
-	])
-
