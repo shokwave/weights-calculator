@@ -1,9 +1,23 @@
 # Set of weights, for a given number find the collection of weights that makes it up
 
+class Weight
+  def initialize (weight)
+    @weight = weight
+  end
+
+  def kg
+    @weight
+  end
+
+  def lb
+    @weight * 2.204
+  end
+end
+
 class Plate
 	attr_reader :kilos, :pounds
 
-	def initialize weight
+	def initialize (weight)
 		@kilos = weight
 		@pounds = (((2.204*weight)*2).round)/2.0
 	end
@@ -11,11 +25,9 @@ class Plate
 	def to_s
 		"#{@kilos} kg / #{@pounds} lbs"
 	end
-
 end
 
 class Bar
-
 	attr_reader :kilos, :pounds
 
 	def initialize
@@ -69,4 +81,3 @@ weight_calc = WeightCalculator.new([
 	1, 1
 	])
 
-p weight_calc.kg 48
